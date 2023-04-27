@@ -61,7 +61,7 @@ update msg model =
   case msg of
     Roll ->
       ( model
-      , Random.generate NewFace (Random.int 1 6) 
+      , Random.generate NewFace (Random.int 1 6)
       )
 
     NewFace newFace ->
