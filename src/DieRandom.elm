@@ -8,10 +8,10 @@ module DieRandom exposing (..)
 
 import Browser
 import Html exposing (..)
+import Html exposing (Html, text, img)
 import Html.Events exposing (..)
 import Random
-import Html.Attributes exposing (align)
-
+import Html.Attributes exposing (align, src)
 
 
 -- MAIN
@@ -29,21 +29,16 @@ main =
 
 -- MODEL
 
-
-
-
 type alias Model =
-{
-    number : Int,
-    image : String
+    {
+        diesFace : String
     
-}
+    }
 
-type DieImages = List 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model 1  "./docs/1.png",
-   Random.generate NewFace (Random.int 1 6)
+  ( Model "" ,
+    Random.generate Newface (Random.int 1 6)
   )
 
 
@@ -52,8 +47,8 @@ init _ =
 
 
 type Msg
-  = Roll
-  | NewFace Int
+  = Roll |
+    Newface Int
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -61,14 +56,12 @@ update msg model =
   case msg of
     Roll ->
       ( model
-      , Random.generate NewFace (Random.int 1 6)
+      , Random.generate Newface (Random.int 1 6)
       )
-
-    NewFace newFace ->
-      ( Model newFace
-      , Cmd.none
-      )
-
+    Newface x ->
+      (Model (dieImg x)
+      , Cmd.none)
+    
 
 
 -- SUBSCRIPTIONS
@@ -86,6 +79,27 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   div [align "center"]
-    [ h1 [] [ text (String.fromInt model.dieFace) ]
+    [ img [ src  model.diesFace  ] []
+    , br [] []
     , button [ onClick Roll ] [ text "Roll" ]
     ]
+
+
+
+dieImg : Int -> String
+dieImg num  =
+    case num of 
+        1 -> 
+            "../docs/1.png"
+        2 ->
+            "../docs/2.png"
+        3 -> 
+            "../docs/3.png"
+        4 ->
+            "../docs/4.png"
+        5 ->
+            "../docs/5.png"
+        6 ->
+            "../docs/6.png"
+        _ ->
+            "../docs/1.png"
