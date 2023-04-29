@@ -8,11 +8,13 @@ module DieRandom exposing (..)
 
 import Browser
 import Html exposing (..)
-import Html exposing (Html, text, img)
+import Html exposing (Html, text)
 import Html.Events exposing (..)
 import Random
-import Html.Attributes exposing (align, src)
-
+import Html.Attributes exposing (align, src )
+import Svg exposing (..)
+import Svg.Attributes exposing (..)
+import Debug exposing (toString)
 
 -- MAIN
 
@@ -31,13 +33,12 @@ main =
 
 type alias Model =
     {
-        diesFace : String
-    
+        diesFace : Int
     }
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model "" ,
+  ( Model 1 ,
     Random.generate Newface (Random.int 1 6)
   )
 
@@ -59,7 +60,7 @@ update msg model =
       , Random.generate Newface (Random.int 1 6)
       )
     Newface x ->
-      (Model (dieImg x)
+      ( Model x
       , Cmd.none)
     
 
@@ -79,12 +80,60 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   div [align "center"]
-    [ img [ src  model.diesFace  ] []
+    [ h1 [] [Html.text (toString model.diesFace)] 
+    , svg
+            [ width "120", height "120", viewBox "0 0 120 120" ]
+            ( List.append
+                [ rect [  width "100", height "100", rx "10", ry "10" ] [] ]
+                [  g [fill "white"] 
+                ( dieSvg model.diesFace )
+                ]
+            )
     , br [] []
-    , button [ onClick Roll ] [ text "Roll" ]
+    , button [ onClick Roll ] [ Html.text "Roll" ]
     ]
 
-
+dieSvg :Int -> List ( Svg Msg)
+dieSvg  num =
+    case num of
+        1 -> 
+           [ circle [cx "50", cy "50", r "8"] [] ]
+           
+        
+        2 -> 
+            [ circle [cx "20", cy "20", r "8"] []
+            , circle [cx "80", cy "80", r "8"] [] 
+            ]
+        3 -> 
+            [ circle [cx "80", cy "20", r "8"] []
+            , circle [cx "50", cy "50", r "8"] [] 
+            , circle [cx "20", cy "80", r "8"] []
+            ]
+        4 -> 
+            [ circle [cx "20", cy "20", r "8"] []
+            , circle [cx "80", cy "20", r "8"] [] 
+            , circle [cx "20", cy "80", r "8"] []
+            , circle [cx "80", cy "80", r "8"] []
+            ]
+        5 -> 
+            [ circle [cx "20", cy "20", r "8"] []
+            , circle [cx "50", cy "50", r "8"] [] 
+            , circle [cx "80", cy "20", r "8"] []
+            , circle [cx "20", cy "80", r "8"] []
+            , circle [cx "80", cy "80", r "8"] []
+            ]
+        6 -> 
+            [ circle [cx "20", cy "20", r "8"] []
+            , circle [cx "50", cy "20", r "8"] [] 
+            , circle [cx "80", cy "20", r "8"] []
+            , circle [cx "20", cy "80", r "8"] []
+            , circle [cx "50", cy "80", r "8"] []
+            , circle [cx "80", cy "80", r "8"] []
+            ]
+        _ -> 
+            []
+           
+        
 
 dieImg : Int -> String
 dieImg num  =
