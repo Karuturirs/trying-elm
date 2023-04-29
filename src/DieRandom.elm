@@ -15,6 +15,7 @@ import Html.Attributes exposing (align, src )
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Debug exposing (toString)
+import Tuple 
 
 -- MAIN
 
@@ -33,13 +34,13 @@ main =
 
 type alias Model =
     {
-        diesFace : Int
+        diesFace : ( Int, Int)
     }
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model 1 ,
-    Random.generate Newface (Random.int 1 6)
+  ( Model (1,1) ,
+    Random.generate Newface diePairGenerator
   )
 
 
@@ -49,7 +50,7 @@ init _ =
 
 type Msg
   = Roll |
-    Newface Int
+    Newface (Int, Int)
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -57,10 +58,10 @@ update msg model =
   case msg of
     Roll ->
       ( model
-      , Random.generate Newface (Random.int 1 6)
+      , Random.generate Newface diePairGenerator
       )
-    Newface x ->
-      ( Model x
+    Newface (x,y) ->
+      ( Model (x,y)
       , Cmd.none)
     
 
@@ -79,19 +80,31 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-  div [align "center"]
-    [ h1 [] [Html.text (toString model.diesFace)] 
-    , svg
+  div [align "center"] [ 
+       table [ ] [ 
+                tr []
+                        [ td [  ][ h1 [] [Html.text (toString  (Tuple.first model.diesFace))] ]
+                        , td [  ][  h1 [] [Html.text (toString  (Tuple.second model.diesFace))]  ]
+                        ]
+                , tr []
+                        [ dietdSvg (Tuple.first model.diesFace)
+                        , dietdSvg (Tuple.second model.diesFace) ]
+                ,tr [ Html.Attributes.align "center"][button [ onClick Roll ] [ Html.text "Roll"  ]]
+            ] 
+    ]
+
+
+dietdSvg :Int -> Html Msg
+dietdSvg num =
+    td [ ] [  
+        svg
             [ width "120", height "120", viewBox "0 0 120 120" ]
             ( List.append
                 [ rect [  width "100", height "100", rx "10", ry "10" ] [] ]
                 [  g [fill "white"] 
-                ( dieSvg model.diesFace )
+                ( dieSvg num )
                 ]
-            )
-    , br [] []
-    , button [ onClick Roll ] [ Html.text "Roll" ]
-    ]
+            ) ]
 
 dieSvg :Int -> List ( Svg Msg)
 dieSvg  num =
@@ -133,7 +146,13 @@ dieSvg  num =
         _ -> 
             []
            
-        
+dieGenerator : Random.Generator Int
+dieGenerator =
+  Random.int 1 6
+
+diePairGenerator : Random.Generator (Int,Int)
+diePairGenerator =
+  Random.pair dieGenerator dieGenerator      
 
 dieImg : Int -> String
 dieImg num  =
