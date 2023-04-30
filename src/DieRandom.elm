@@ -83,8 +83,8 @@ view model =
   div [align "center"] [ 
        table [ ] [ 
                 tr []
-                        [ td [  ][ h1 [] [Html.text (toString  (Tuple.first model.diesFace))] ]
-                        , td [  ][  h1 [] [Html.text (toString  (Tuple.second model.diesFace))]  ]
+                        [ td [ Html.Attributes.align "center" ][ h1 [] [Html.text (toString  (Tuple.first model.diesFace))] ]
+                        , td [ Html.Attributes.align "center" ][  h1 [] [Html.text (toString  (Tuple.second model.diesFace))]  ]
                         ]
                 , tr []
                         [ dietdSvg (Tuple.first model.diesFace)
@@ -158,16 +158,16 @@ dieImg : Int -> String
 dieImg num  =
     case num of 
         1 -> 
-            "../docs/1.png"
+            "../public/1.png"
         2 ->
-            "../docs/2.png"
+            "../public/2.png"
         3 -> 
-            "../docs/3.png"
+            "../public/3.png"
         4 ->
-            "../docs/4.png"
+            "../public/4.png"
         5 ->
-            "../docs/5.png"
+            "../public/5.png"
         6 ->
-            "../docs/6.png"
+            "../public/6.png"
         _ ->
-            "../docs/1.png"
+            "../public/1.png"
