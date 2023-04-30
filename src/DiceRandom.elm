@@ -1,4 +1,4 @@
-module DieRandom exposing (..)
+module DiceRandom exposing (..)
 
 -- Press a button to generate a random number between 1 and 6.
 --
@@ -34,13 +34,13 @@ main =
 
 type alias Model =
     {
-        diesFace : ( Int, Int)
+        diceFace : ( Int, Int)
     }
 
 init : () -> (Model, Cmd Msg)
 init _ =
   ( Model (1,1) ,
-    Random.generate Newface diePairGenerator
+    Random.generate Newface dicePairGenerator
   )
 
 
@@ -52,13 +52,14 @@ type Msg
   = Roll |
     Newface (Int, Int)
 
-
+{- #TODO would love to work on " Have the dice flip around randomly before they settle on a final value."
+-}
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Roll ->
       ( model
-      , Random.generate Newface diePairGenerator
+      , Random.generate Newface dicePairGenerator
       )
     Newface (x,y) ->
       ( Model (x,y)
@@ -83,31 +84,31 @@ view model =
   div [align "center"] [ 
        table [ ] [ 
                 tr []
-                        [ td [ Html.Attributes.align "center" ][ h1 [] [Html.text (toString  (Tuple.first model.diesFace))] ]
-                        , td [ Html.Attributes.align "center" ][  h1 [] [Html.text (toString  (Tuple.second model.diesFace))]  ]
+                        [ td [ Html.Attributes.align "center" ][ h1 [] [Html.text (toString  (Tuple.first model.diceFace))] ]
+                        , td [ Html.Attributes.align "center" ][  h1 [] [Html.text (toString  (Tuple.second model.diceFace))]  ]
                         ]
                 , tr []
-                        [ dietdSvg (Tuple.first model.diesFace)
-                        , dietdSvg (Tuple.second model.diesFace) ]
+                        [ diceTdSvg (Tuple.first model.diceFace)
+                        , diceTdSvg (Tuple.second model.diceFace) ]
                 ,tr [ Html.Attributes.align "center"][button [ onClick Roll ] [ Html.text "Roll"  ]]
             ] 
     ]
 
 
-dietdSvg :Int -> Html Msg
-dietdSvg num =
+diceTdSvg :Int -> Html Msg
+diceTdSvg num =
     td [ ] [  
         svg
             [ width "120", height "120", viewBox "0 0 120 120" ]
             ( List.append
                 [ rect [  width "100", height "100", rx "10", ry "10" ] [] ]
                 [  g [fill "white"] 
-                ( dieSvg num )
+                ( diceSvg num )
                 ]
             ) ]
 
-dieSvg :Int -> List ( Svg Msg)
-dieSvg  num =
+diceSvg :Int -> List ( Svg Msg)
+diceSvg  num =
     case num of
         1 -> 
            [ circle [cx "50", cy "50", r "8"] [] ]
@@ -146,16 +147,16 @@ dieSvg  num =
         _ -> 
             []
            
-dieGenerator : Random.Generator Int
-dieGenerator =
+diceGenerator : Random.Generator Int
+diceGenerator =
   Random.int 1 6
 
-diePairGenerator : Random.Generator (Int,Int)
-diePairGenerator =
-  Random.pair dieGenerator dieGenerator      
+dicePairGenerator : Random.Generator (Int,Int)
+dicePairGenerator =
+  Random.pair diceGenerator diceGenerator      
 
-dieImg : Int -> String
-dieImg num  =
+diceImg : Int -> String
+diceImg num  =
     case num of 
         1 -> 
             "../public/1.png"

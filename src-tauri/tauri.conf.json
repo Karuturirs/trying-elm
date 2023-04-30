@@ -1,12 +1,12 @@
 {
   "build": {
-    "beforeBuildCommand": "elm make src/DieRandom.elm --output=../public/elm.js",
+    "beforeBuildCommand": "elm make src/DiceRandom.elm --output=public/elm.js",
     "beforeDevCommand": "elm reactor --port=8001",
     "devPath": "http://localhost:8001",
     "distDir": "../public"
   },
   "package": {
-    "productName": "Pair of Dies",
+    "productName": "Pair of Dice",
     "version": "0.1.0"
   },
   "tauri": {
@@ -28,7 +28,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "ElmDies",
+      "identifier": "ElmDice",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -57,7 +57,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "Roll the dies",
+        "title": "Roll the dice",
         "width": 800
       }
     ]

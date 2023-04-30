@@ -5242,10 +5242,10 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$DieRandom$Model = function (diesFace) {
-	return {diesFace: diesFace};
+var $author$project$DiceRandom$Model = function (diceFace) {
+	return {diceFace: diceFace};
 };
-var $author$project$DieRandom$Newface = function (a) {
+var $author$project$DiceRandom$Newface = function (a) {
 	return {$: 'Newface', a: a};
 };
 var $elm$random$Random$Generator = function (a) {
@@ -5303,7 +5303,7 @@ var $elm$random$Random$int = F2(
 				}
 			});
 	});
-var $author$project$DieRandom$dieGenerator = A2($elm$random$Random$int, 1, 6);
+var $author$project$DiceRandom$diceGenerator = A2($elm$random$Random$int, 1, 6);
 var $elm$random$Random$map2 = F3(
 	function (func, _v0, _v1) {
 		var genA = _v0.a;
@@ -5332,7 +5332,7 @@ var $elm$random$Random$pair = F2(
 			genA,
 			genB);
 	});
-var $author$project$DieRandom$diePairGenerator = A2($elm$random$Random$pair, $author$project$DieRandom$dieGenerator, $author$project$DieRandom$dieGenerator);
+var $author$project$DiceRandom$dicePairGenerator = A2($elm$random$Random$pair, $author$project$DiceRandom$diceGenerator, $author$project$DiceRandom$diceGenerator);
 var $elm$random$Random$Generate = function (a) {
 	return {$: 'Generate', a: a};
 };
@@ -5427,36 +5427,36 @@ var $elm$random$Random$generate = F2(
 			$elm$random$Random$Generate(
 				A2($elm$random$Random$map, tagger, generator)));
 	});
-var $author$project$DieRandom$init = function (_v0) {
+var $author$project$DiceRandom$init = function (_v0) {
 	return _Utils_Tuple2(
-		$author$project$DieRandom$Model(
+		$author$project$DiceRandom$Model(
 			_Utils_Tuple2(1, 1)),
-		A2($elm$random$Random$generate, $author$project$DieRandom$Newface, $author$project$DieRandom$diePairGenerator));
+		A2($elm$random$Random$generate, $author$project$DiceRandom$Newface, $author$project$DiceRandom$dicePairGenerator));
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$DieRandom$subscriptions = function (model) {
+var $author$project$DiceRandom$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$none;
 };
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$DieRandom$update = F2(
+var $author$project$DiceRandom$update = F2(
 	function (msg, model) {
 		if (msg.$ === 'Roll') {
 			return _Utils_Tuple2(
 				model,
-				A2($elm$random$Random$generate, $author$project$DieRandom$Newface, $author$project$DieRandom$diePairGenerator));
+				A2($elm$random$Random$generate, $author$project$DiceRandom$Newface, $author$project$DiceRandom$dicePairGenerator));
 		} else {
 			var _v1 = msg.a;
 			var x = _v1.a;
 			var y = _v1.b;
 			return _Utils_Tuple2(
-				$author$project$DieRandom$Model(
+				$author$project$DiceRandom$Model(
 					_Utils_Tuple2(x, y)),
 				$elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$DieRandom$Roll = {$: 'Roll'};
+var $author$project$DiceRandom$Roll = {$: 'Roll'};
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5480,7 +5480,7 @@ var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
 var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
 var $elm$svg$Svg$Attributes$cy = _VirtualDom_attribute('cy');
 var $elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
-var $author$project$DieRandom$dieSvg = function (num) {
+var $author$project$DiceRandom$diceSvg = function (num) {
 	switch (num) {
 		case 1:
 			return _List_fromArray(
@@ -5709,7 +5709,7 @@ var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
 var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
 var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
-var $author$project$DieRandom$dietdSvg = function (num) {
+var $author$project$DiceRandom$diceTdSvg = function (num) {
 	return A2(
 		$elm$html$Html$td,
 		_List_Nil,
@@ -5746,7 +5746,7 @@ var $author$project$DieRandom$dietdSvg = function (num) {
 								[
 									$elm$svg$Svg$Attributes$fill('white')
 								]),
-							$author$project$DieRandom$dieSvg(num))
+							$author$project$DiceRandom$diceSvg(num))
 						])))
 			]));
 };
@@ -5778,7 +5778,7 @@ var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$core$Debug$toString = _Debug_toString;
 var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$DieRandom$view = function (model) {
+var $author$project$DiceRandom$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -5811,7 +5811,7 @@ var $author$project$DieRandom$view = function (model) {
 										_List_fromArray(
 											[
 												$elm$html$Html$text(
-												$elm$core$Debug$toString(model.diesFace.a))
+												$elm$core$Debug$toString(model.diceFace.a))
 											]))
 									])),
 								A2(
@@ -5828,7 +5828,7 @@ var $author$project$DieRandom$view = function (model) {
 										_List_fromArray(
 											[
 												$elm$html$Html$text(
-												$elm$core$Debug$toString(model.diesFace.b))
+												$elm$core$Debug$toString(model.diceFace.b))
 											]))
 									]))
 							])),
@@ -5837,8 +5837,8 @@ var $author$project$DieRandom$view = function (model) {
 						_List_Nil,
 						_List_fromArray(
 							[
-								$author$project$DieRandom$dietdSvg(model.diesFace.a),
-								$author$project$DieRandom$dietdSvg(model.diesFace.b)
+								$author$project$DiceRandom$diceTdSvg(model.diceFace.a),
+								$author$project$DiceRandom$diceTdSvg(model.diceFace.b)
 							])),
 						A2(
 						$elm$html$Html$tr,
@@ -5852,7 +5852,7 @@ var $author$project$DieRandom$view = function (model) {
 								$elm$html$Html$button,
 								_List_fromArray(
 									[
-										$elm$html$Html$Events$onClick($author$project$DieRandom$Roll)
+										$elm$html$Html$Events$onClick($author$project$DiceRandom$Roll)
 									]),
 								_List_fromArray(
 									[
@@ -5862,7 +5862,7 @@ var $author$project$DieRandom$view = function (model) {
 					]))
 			]));
 };
-var $author$project$DieRandom$main = $elm$browser$Browser$element(
-	{init: $author$project$DieRandom$init, subscriptions: $author$project$DieRandom$subscriptions, update: $author$project$DieRandom$update, view: $author$project$DieRandom$view});
-_Platform_export({'DieRandom':{'init':$author$project$DieRandom$main(
+var $author$project$DiceRandom$main = $elm$browser$Browser$element(
+	{init: $author$project$DiceRandom$init, subscriptions: $author$project$DiceRandom$subscriptions, update: $author$project$DiceRandom$update, view: $author$project$DiceRandom$view});
+_Platform_export({'DiceRandom':{'init':$author$project$DiceRandom$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
