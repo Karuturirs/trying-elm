@@ -3,3 +3,5 @@ elm-stuff/
 # editor
 .idea/
 .vscode/
+
+src-tauri/target/*
