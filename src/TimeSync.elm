@@ -1,15 +1,21 @@
 module TimeSync exposing (..)
 
 import Browser
-import Html exposing (..)
 import Time
-import Date exposing (fromCalendarDate, fromPosix)
-import Time exposing (millisToPosix, utc, Month(..))
-import Html.Events exposing (..)
 import Task 
-import Html.Attributes exposing (value, size, placeholder, align)
+import Html
+import Html exposing (node, Html, button, input, div)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import Html.Events exposing (..)
+import Date exposing (fromCalendarDate, fromPosix)
+import Time exposing (millisToPosix, utc, Month(..))
+import Html.Attributes exposing (value, size, placeholder, align, attribute)
+
+
+
+
+
 
 
 --Main
@@ -34,6 +40,7 @@ type alias Model =
   , hh : Int
   , mm: Int 
   , am : String 
+  , utcmill : Int
   }
 
 
@@ -43,7 +50,7 @@ type AmPm = AM | PM
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model Time.utc (Time.millisToPosix 0) 2023 12 30  8 30  "AM"
+  ( Model Time.utc (Time.millisToPosix 0) 2023 12 30  8 30  "AM" 0
   , Task.perform AdjustTimeZone Time.here
   )
 
@@ -109,10 +116,8 @@ update msg model =
         , Cmd.none
         )
     Share -> 
-        let
-            dateTimeString = String.fromInt model.year ++"-"++ String.fromInt model.month ++"-"++ String.fromInt model.day ++ " " ++ String.fromInt model.hh ++ ":"++ String.fromInt model.mm
-        in
-            ( model 
+        
+            (  model  
             , Cmd.none
             )
 
@@ -136,10 +141,11 @@ view model =
     hour   = Time.toHour   model.zone model.time
     minute = Time.toMinute model.zone model.time
     second = Time.toSecond model.zone model.time
+
   in
     div[align "center"][
-        h3 [] [ Html.text (dateString ++ " " ++  String.fromInt hour ++ ":" ++  String.fromInt minute ++ ":" ++  String.fromInt second) ]
-        , div [] [
+       -- h3 [] [ Html.text (dateString ++ " " ++  String.fromInt hour ++ ":" ++  String.fromInt minute ++ ":" ++  String.fromInt second) ],
+          div [] [
              svg
                 [ viewBox "0 0 400 400"
                 , width "400"
@@ -149,31 +155,33 @@ view model =
                 , viewHand 6 60 (toFloat hour/12)
                 , viewHand 6 90 (toFloat minute/60)
                 , viewHand 3 90 (toFloat second/60)
-                ,  Svg.text_
-                        [   Svg.Attributes.x "33%", Svg.Attributes.y "55%", Svg.Attributes.textAnchor "middle", 
-                            fontFamily "Verdana", 
-                            fontSize "15",
-                            textAnchor "middle",
-                            fill "white" -- this centers the text horizontally. I don't know how to center it vertically (maybe use tspan dy??). ###
-                            ,Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+                ,   Svg.text_
+                    [   Svg.Attributes.x "50%", Svg.Attributes.y "25%", Svg.Attributes.textAnchor "middle", 
+                        fontFamily "Gill Sans", 
+                        fontSize "20",
+                        textAnchor "middle",
+                        fill "white", 
+                        Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
 
-                        ] [Svg.text (String.fromInt model.year )]
+                    ] [Svg.text( String.fromInt (Date.year (fromPosix model.zone model.time)) )]
                 ,  Svg.text_
-                    [   Svg.Attributes.x "50%", Svg.Attributes.y "55%", Svg.Attributes.textAnchor "middle", 
-                        fontFamily "Verdana", 
-                        fontSize "12",
-                        textAnchor "middle" -- this centers the text horizontally. I don't know how to center it vertically (maybe use tspan dy??). ###
-                        ,Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+                    [   Svg.Attributes.x "50%", Svg.Attributes.y "70%", Svg.Attributes.textAnchor "middle", 
+                        fontFamily "Gill Sans", 
+                        fontSize "20",
+                        textAnchor "middle",
+                        fill "white", 
+                        Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
 
-                    ] [Svg.text (String.fromInt model.month )]
+                    ] [Svg.text (  (Date.month (fromPosix model.zone model.time)) |> monthToName )]
                 ,  Svg.text_
-                    [   Svg.Attributes.x "67%", Svg.Attributes.y "55%", Svg.Attributes.textAnchor "middle", 
-                        fontFamily "Verdana", 
-                        fontSize "12",
-                        textAnchor "middle" -- this centers the text horizontally. I don't know how to center it vertically (maybe use tspan dy??). ###
-                        ,Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+                    [   Svg.Attributes.x "50%", Svg.Attributes.y "75%", Svg.Attributes.textAnchor "middle", 
+                        fontFamily "Gill Sans", 
+                        fontSize "20",
+                        textAnchor "middle",
+                        fill "white", 
+                        Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
 
-                    ] [Svg.text (String.fromInt model.day )]
+                    ] [Svg.text (String.fromInt (Date.day (fromPosix model.zone model.time))  )]
                 ]
             ]
 
@@ -188,8 +196,8 @@ view model =
         , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.mm), onInput MinUpdate] []
         , Html.text "  "
         , input [ type_ "text", size 1, placeholder "AM", value  model.am , onInput TimeUpdate ] []
-        , button [ onClick Share ] [ Html.text "Share"  ]
-            
+        , button [ onClick Share ] [ Html.text "Share" ]
+        , dateToMillsec  model.year model.month model.day model.hh model.mm
     ]
     
 
@@ -224,9 +232,19 @@ view model =
 --     in
 --     posix
 
+dateToMillsec : Int -> Int -> Int -> Int-> Int -> Html Msg
+dateToMillsec year month day hh mm =
+  Html.node "time-millisec"
+    [ attribute "year" (String.fromInt year)
+    , attribute "month" (String.fromInt month)
+    , attribute "day" (String.fromInt day)
+    , attribute "hh" (String.fromInt hh)
+    , attribute "mm" (String.fromInt mm)
+    ]
+    []
 
 
-viewHand : Int -> Float -> Float -> Svg msg
+viewHand : Int -> Float -> Float -> Svg Msg
 viewHand width length turns =
   let
     t = 2 * pi * (turns - 0.25)
@@ -243,3 +261,42 @@ viewHand width length turns =
     , strokeLinecap "round"
     ]
     []
+
+monthToName : Month -> String
+monthToName m =
+    case m of
+        Jan ->
+            "January"
+
+        Feb ->
+            "February"
+
+        Mar ->
+            "March"
+
+        Apr ->
+            "April"
+
+        May ->
+            "May"
+
+        Jun ->
+            "June"
+
+        Jul ->
+            "July"
+
+        Aug ->
+            "August"
+
+        Sep ->
+            "September"
+
+        Oct ->
+            "October"
+
+        Nov ->
+            "November"
+
+        Dec ->
+            "December"

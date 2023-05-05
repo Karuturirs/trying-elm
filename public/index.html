@@ -13,8 +13,34 @@
 
 <script type="text/javascript">
 
+function dateToMillsec( year, month, day, hh, mm)
+{
+		return (new Date(year, month-1, day, hh, mm)).getTime();
+}
+
+customElements.define('time-millisec',
+    class extends HTMLElement {
+        // things required by Custom Elements
+        constructor() { super(); }
+        connectedCallback() { this.setTextContent(); }
+        attributeChangedCallback() { this.setTextContent(); }
+        static get observedAttributes() { return ['year', 'month', 'day', 'hh', 'mm']; }
+
+        // Our function to set the textContent based on attributes.
+        setTextContent()
+        {
+            const year = this.getAttribute('year');
+            const month = this.getAttribute('month');
+            const day = this.getAttribute('day');
+            const hh = this.getAttribute('hh');
+            const mm = this.getAttribute('mm');
+            this.textContent = dateToMillsec(year, month, day, hh, mm);
+        }
+    }
+);
+
 // Start the Elm application.
-var app = Elm.Main.init({
+var app = Elm.TimeSync.init({
 	node: document.getElementById('myapp')
 });
 
