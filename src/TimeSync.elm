@@ -4,7 +4,7 @@ import Browser
 import Time
 import Task 
 import Html
-import Html exposing (node, Html, button, input, div)
+import Html exposing (node, Html, button, input, div, br)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -40,7 +40,7 @@ type alias Model =
   , hh : Int
   , mm: Int 
   , am : String 
-  , utcmill : Int
+  , link : Bool
   }
 
 
@@ -50,7 +50,7 @@ type AmPm = AM | PM
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model Time.utc (Time.millisToPosix 0) 2023 12 30  8 30  "AM" 0
+  ( Model Time.utc (Time.millisToPosix 0) 2023 12 30  8 30  "AM" False
   , Task.perform AdjustTimeZone Time.here
   )
 
@@ -92,34 +92,33 @@ update msg model =
       )
 
     YearUpdate newYear-> 
-        ( { model | year = Maybe.withDefault 0 (String.toInt newYear) }
+        ( { model | year = Maybe.withDefault 0 (String.toInt newYear) , link = False}
         , Cmd.none
         )
     MonthUpdate newMonth ->
-        ( { model | month = Maybe.withDefault 0 (String.toInt newMonth) }
+        ( { model | month = Maybe.withDefault 0 (String.toInt newMonth), link = False }
         , Cmd.none
         )
     DayUpdate newDay ->
-        ( { model | day = Maybe.withDefault 0 (String.toInt newDay) }
+        ( { model | day = Maybe.withDefault 0 (String.toInt newDay) , link = False}
         , Cmd.none
         )
     HourUpdate newhh ->
-        ( { model | hh = Maybe.withDefault 0 (String.toInt newhh) }
+        ( { model | hh = Maybe.withDefault 0 (String.toInt newhh), link = False }
         , Cmd.none
         )
     MinUpdate newmm ->
-        ( { model | mm = Maybe.withDefault 0 (String.toInt newmm) }
+        ( { model | mm = Maybe.withDefault 0 (String.toInt newmm), link = False }
         , Cmd.none
         )
     TimeUpdate newtime ->
-        ( { model | am =  newtime }
+        ( { model | am =  newtime , link = False }
         , Cmd.none
         )
     Share -> 
-        
-            (  model  
-            , Cmd.none
-            )
+        (  { model | link =  True }
+        , Cmd.none
+        )
 
 
 
@@ -197,7 +196,8 @@ view model =
         , Html.text "  "
         , input [ type_ "text", size 1, placeholder "AM", value  model.am , onInput TimeUpdate ] []
         , button [ onClick Share ] [ Html.text "Share" ]
-        , dateToMillsec  model.year model.month model.day model.hh model.mm
+        , br [][]
+        , div[][ dateToMillsec  model.year model.month model.day model.hh model.mm model.link ]
     ]
     
 
@@ -232,16 +232,19 @@ view model =
 --     in
 --     posix
 
-dateToMillsec : Int -> Int -> Int -> Int-> Int -> Html Msg
-dateToMillsec year month day hh mm =
-  Html.node "time-millisec"
-    [ attribute "year" (String.fromInt year)
-    , attribute "month" (String.fromInt month)
-    , attribute "day" (String.fromInt day)
-    , attribute "hh" (String.fromInt hh)
-    , attribute "mm" (String.fromInt mm)
-    ]
-    []
+dateToMillsec : Int -> Int -> Int -> Int-> Int -> Bool -> Html Msg
+dateToMillsec year month day hh mm link =
+    if link then
+        Html.node "time-millisec"
+            [ attribute "year" (String.fromInt year)
+            , attribute "month" (String.fromInt month)
+            , attribute "day" (String.fromInt day)
+            , attribute "hh" (String.fromInt hh)
+            , attribute "mm" (String.fromInt mm)
+            ]
+            []
+    else 
+        Html.a [][]
 
 
 viewHand : Int -> Float -> Float -> Svg Msg
