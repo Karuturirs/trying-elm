@@ -3,8 +3,7 @@ module Main exposing (main)
 import Html exposing (..)
 import Html.Events exposing (onClick)
 import Time exposing (Time)
-import Time.Extra exposing (weekdayToInt, fromCalendarDate, fromPosix)
-import Calendar exposing (Calendar, Model, Msg, view, update)
+
 
 
 type alias Model =
@@ -29,6 +28,7 @@ init : () -> (Model, Cmd Msg)
 init _ =
   ( Model Time.utc (Time.millisToPosix 0) { year = toYear Time.now
     , month = toMonth Time.now |> Month.toNumber
+    , zone = Time.utc
     , selectedDate = Nothing
     , visible = False
     }  "2023/05/31 22:25" 
@@ -50,7 +50,7 @@ update msg model =
             ( { model | time = newTime }
             , Cmd.none
             )
-
+        --TODO may need update calender timezone
         AdjustTimeZone newZone ->
             ( { model | zone = newZone }
             , Cmd.none
