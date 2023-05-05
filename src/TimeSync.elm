@@ -7,7 +7,10 @@ import Date exposing (fromCalendarDate, fromPosix)
 import Time exposing (millisToPosix, utc, Month(..))
 import Html.Events exposing (..)
 import Task 
-import Html.Attributes  exposing (..)
+import Html.Attributes exposing (value, size, placeholder, align)
+import Svg exposing (..)
+import Svg.Attributes exposing (..)
+
 
 --Main
 
@@ -59,6 +62,7 @@ type Msg
   | HourUpdate String 
   | MinUpdate String 
   | TimeUpdate String
+  | Share
 
 
 
@@ -104,6 +108,13 @@ update msg model =
         ( { model | am =  newtime }
         , Cmd.none
         )
+    Share -> 
+        let
+            dateTimeString = String.fromInt model.year ++"-"++ String.fromInt model.month ++"-"++ String.fromInt model.day ++ " " ++ String.fromInt model.hh ++ ":"++ String.fromInt model.mm
+        in
+            ( model 
+            , Cmd.none
+            )
 
 
 
@@ -122,28 +133,65 @@ view : Model -> Html Msg
 view model =
   let
     dateString = Date.toIsoString (fromPosix model.zone model.time)
-    hour   = String.fromInt (Time.toHour   model.zone model.time)
-    minute = String.fromInt (Time.toMinute model.zone model.time)
-    second = String.fromInt (Time.toSecond model.zone model.time)
+    hour   = Time.toHour   model.zone model.time
+    minute = Time.toMinute model.zone model.time
+    second = Time.toSecond model.zone model.time
   in
     div[align "center"][
-        h3 [] [ text (dateString ++ " " ++ hour ++ ":" ++ minute ++ " " ++ second) ]
+        h3 [] [ Html.text (dateString ++ " " ++  String.fromInt hour ++ ":" ++  String.fromInt minute ++ ":" ++  String.fromInt second) ]
         , div [] [
-             text ""
-            , input [ type_ "text", size 2,  placeholder "YYYY", value (String.fromInt model.year) , onInput YearUpdate  ] []
-            , text "-"
-            , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.month) , onInput MonthUpdate ] []
-            , text "-"
-            , input [ type_ "text", size 1, placeholder "DD", value (String.fromInt model.day) , onInput DayUpdate ] []
-            , text "         "
-            , input [ type_ "text", size 1, placeholder "HH", value (String.fromInt model.hh), onInput HourUpdate ] []
-            , text ":"
-            , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.mm), onInput MinUpdate] []
-            , text "  "
-            , input [ type_ "text", size 1, placeholder "AM", value  model.am , onInput TimeUpdate ] []
+             svg
+                [ viewBox "0 0 400 400"
+                , width "400"
+                , height "400"
+                ]
+                [ circle [ cx "200", cy "200", r "120", fill "#1293D8" ] []
+                , viewHand 6 60 (toFloat hour/12)
+                , viewHand 6 90 (toFloat minute/60)
+                , viewHand 3 90 (toFloat second/60)
+                ,  Svg.text_
+                        [   Svg.Attributes.x "33%", Svg.Attributes.y "55%", Svg.Attributes.textAnchor "middle", 
+                            fontFamily "Verdana", 
+                            fontSize "15",
+                            textAnchor "middle",
+                            fill "white" -- this centers the text horizontally. I don't know how to center it vertically (maybe use tspan dy??). ###
+                            ,Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+
+                        ] [Svg.text (String.fromInt model.year )]
+                ,  Svg.text_
+                    [   Svg.Attributes.x "50%", Svg.Attributes.y "55%", Svg.Attributes.textAnchor "middle", 
+                        fontFamily "Verdana", 
+                        fontSize "12",
+                        textAnchor "middle" -- this centers the text horizontally. I don't know how to center it vertically (maybe use tspan dy??). ###
+                        ,Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+
+                    ] [Svg.text (String.fromInt model.month )]
+                ,  Svg.text_
+                    [   Svg.Attributes.x "67%", Svg.Attributes.y "55%", Svg.Attributes.textAnchor "middle", 
+                        fontFamily "Verdana", 
+                        fontSize "12",
+                        textAnchor "middle" -- this centers the text horizontally. I don't know how to center it vertically (maybe use tspan dy??). ###
+                        ,Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+
+                    ] [Svg.text (String.fromInt model.day )]
+                ]
+            ]
+
+        , input [ type_ "text", size 2,  placeholder "YYYY", value (String.fromInt model.year) , onInput YearUpdate  ] []
+        , Html.text "-"
+        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.month) , onInput MonthUpdate ] []
+        , Html.text "-"
+        , input [ type_ "text", size 1, placeholder "DD", value (String.fromInt model.day) , onInput DayUpdate ] []
+        , Html.text "         "
+        , input [ type_ "text", size 1, placeholder "HH", value (String.fromInt model.hh), onInput HourUpdate ] []
+        , Html.text ":"
+        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.mm), onInput MinUpdate] []
+        , Html.text "  "
+        , input [ type_ "text", size 1, placeholder "AM", value  model.am , onInput TimeUpdate ] []
+        , button [ onClick Share ] [ Html.text "Share"  ]
             
-        ]
     ]
+    
 
 
 --
@@ -155,3 +203,43 @@ view model =
 --     in
 --         input [ type_ t, placeholder p, value v, onInput ShowCalendar ] []
 
+
+-- yyyy-mm-dd HH:mm
+-- toPosix : Time.Zone -> String -> Int
+-- toPosix zone dateTimeString =
+--     let
+--         dateTime = String.split " " dateTimeString
+--         date = List.head dateTime
+--         time = List.head <| List.tail dateTime
+--         [ year, month, day ] = String.split "-" date
+--         [ hours, minutes ] = String.split ":" time
+--         posix = Time.posix <| Time.millisToPosix 0
+--             |> Time.setYear (String.toInt year |> Result.withDefault 0)
+--             |> Time.setMonth (String.toInt month |> Result.withDefault 1)
+--             |> Time.setDay (String.toInt day |> Result.withDefault 1)
+--             |> Time.setHour (String.toInt hours |> Result.withDefault 0)
+--             |> Time.setMinute (String.toInt minutes |> Result.withDefault 0)
+--             |> Time.inZone zone
+--             |> Time.toMillis
+--     in
+--     posix
+
+
+
+viewHand : Int -> Float -> Float -> Svg msg
+viewHand width length turns =
+  let
+    t = 2 * pi * (turns - 0.25)
+    x = 200 + length * cos t
+    y = 200 + length * sin t
+  in
+  line
+    [ x1 "200"
+    , y1 "200"
+    , x2 (String.fromFloat x)
+    , y2 (String.fromFloat y)
+    , stroke "white"
+    , strokeWidth (String.fromInt width)
+    , strokeLinecap "round"
+    ]
+    []
