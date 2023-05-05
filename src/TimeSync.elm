@@ -3,6 +3,8 @@ module TimeSync exposing (..)
 import Browser
 import Html exposing (..)
 import Time
+import Date exposing (fromCalendarDate, fromPosix)
+import Time exposing (millisToPosix, utc, Month(..))
 import Html.Events exposing (..)
 import Task 
 import Html.Attributes  exposing (..)
@@ -118,16 +120,29 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-  
-    div [] [
-        
-        , input [ type_ "text", size 2,  placeholder "YYYY", value (String.fromInt model.year) , onInput YearUpdate  ] []
-        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.month) , onInput MonthUpdate ] []
-        , input [ type_ "text", size 1, placeholder "DD", value (String.fromInt model.day) , onInput DayUpdate ] []
-        , input [ type_ "text", size 1, placeholder "HH", value (String.fromInt model.hh), onInput HourUpdate ] []
-        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.mm), onInput MinUpdate] []
-        , input [ type_ "text", size 1, placeholder "AM", value  model.am , onInput TimeUpdate ] []
-        
+  let
+    dateString = Date.toIsoString (fromPosix model.zone model.time)
+    hour   = String.fromInt (Time.toHour   model.zone model.time)
+    minute = String.fromInt (Time.toMinute model.zone model.time)
+    second = String.fromInt (Time.toSecond model.zone model.time)
+  in
+    div[align "center"][
+        h3 [] [ text (dateString ++ " " ++ hour ++ ":" ++ minute ++ " " ++ second) ]
+        , div [] [
+             text ""
+            , input [ type_ "text", size 2,  placeholder "YYYY", value (String.fromInt model.year) , onInput YearUpdate  ] []
+            , text "-"
+            , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.month) , onInput MonthUpdate ] []
+            , text "-"
+            , input [ type_ "text", size 1, placeholder "DD", value (String.fromInt model.day) , onInput DayUpdate ] []
+            , text "         "
+            , input [ type_ "text", size 1, placeholder "HH", value (String.fromInt model.hh), onInput HourUpdate ] []
+            , text ":"
+            , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.mm), onInput MinUpdate] []
+            , text "  "
+            , input [ type_ "text", size 1, placeholder "AM", value  model.am , onInput TimeUpdate ] []
+            
+        ]
     ]
 
 
