@@ -24,11 +24,12 @@ customElements.define('time-millisec',
         constructor() { super(); }
         connectedCallback() { this.setTextContent(); }
         attributeChangedCallback() { this.setTextContent(); }
-        static get observedAttributes() { return ['year', 'month', 'day', 'hh', 'mm']; }
+        static get observedAttributes() { return ['id','year', 'month', 'day', 'hh', 'mm']; }
 
         // Our function to set the textContent based on attributes.
         setTextContent()
         {
+            const id = this.getAttribute('id')
             const year = this.getAttribute('year');
             const month = this.getAttribute('month');
             const day = this.getAttribute('day');
@@ -39,8 +40,30 @@ customElements.define('time-millisec',
     }
 );
 
+function millsecToDate(millsec)
+{
+		return (new Date(millsec));
+}
+
+customElements.define('millsec-to-time',
+    class extends HTMLElement {
+        // things required by Custom Elements
+        constructor() { super(); }
+        connectedCallback() { this.setTextContent(); }
+        attributeChangedCallback() { this.setTextContent(); }
+        static get observedAttributes() { return ['millsec']; }
+
+        // Our function to set the textContent based on attributes.
+        setTextContent()
+        {
+            const mill = this.getAttribute('millsec');
+            this.textContent = millsecToDate(mill);
+        }
+    }
+);
+
 // Start the Elm application.
-var app = Elm.TimeSync.init({
+var app = Elm.TimeMatcher.init({
 	node: document.getElementById('myapp')
 });
 
