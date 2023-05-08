@@ -238,10 +238,10 @@ view model =
 
 -- HELPING FUNCTIONS
 
-updateSlotYear : (String, Int , Slot) -> String -> String -> Int -> (String, Int , Slot)
+updateSlotYear : (String, Int , Slot) -> String  -> Int -> (String, Int , Slot)
 updateSlotYear (p, q, r) key  newValue =
     if p == key then
-        (p, q, { r | year = (String.fromInt newValue) })
+        (p, q, { r | year = newValue })
     else
         (p, q, r)
     
@@ -249,35 +249,35 @@ updateSlotYear (p, q, r) key  newValue =
 updateSlotMonth : (String, Int , Slot) -> String -> Int  -> (String, Int , Slot)
 updateSlotMonth (p, q, r) key newValue =
     if p == key then
-        (p, q, { r | month = (String.fromInt newValue) })
+        (p, q, { r | month = newValue })
     else
         (p, q, r)
 
 updateSlotDay : (String, Int , Slot) -> String -> Int  -> (String, Int , Slot)
 updateSlotDay (p, q, r) key newValue =
     if p == key then
-        (p, q, { r | day = (String.fromInt newValue) })
+        (p, q, { r | day = newValue })
     else
         (p, q, r)
 
 updateSlotHH : (String, Int , Slot) -> String -> Int  -> (String, Int , Slot)
 updateSlotHH (p, q, r) key newValue =
     if p == key then
-        (p, q, { r | hh = (String.fromInt newValue) })
+        (p, q, { r | hh = newValue })
     else
         (p, q, r)
 
 updateSlotMM : (String, Int , Slot) -> String -> Int  -> (String, Int , Slot)
 updateSlotMM (p, q, r) key newValue =
     if p == key then
-        (p, q, { r | mm = (String.fromInt newValue) })
+        (p, q, { r | mm = newValue })
     else
         (p, q, r)
 
 displaySlots : Model -> Html Msg
 displaySlots model = 
         List.map (\(key, _, slot) -> timeSlotElement slot key ) model.ms
-            |> div []  
+            |> div [Html.Attributes.id "34rr"]  
             
       
     

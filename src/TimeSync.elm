@@ -4,78 +4,88 @@ import Browser
 import Time
 import Task 
 import Html
+import Url exposing (..)
+import Browser.Navigation as Nav
 import Html exposing (node, Html, button, input, div, br)
-import Svg exposing (..)
-import Svg.Attributes exposing (..)
-import Html.Events exposing (..)
+
 import Date exposing (fromCalendarDate, fromPosix)
 import Time exposing (millisToPosix, utc, Month(..))
 import Html.Attributes exposing (value, size, placeholder, align, attribute)
-
-
-
-
-
+import List exposing (sort)
+import Html.Attributes exposing (id)
 
 
 --Main
 
+
+main : Program () Model Msg
 main =
-  Browser.element
+  Browser.application
     { init = init
     , update = update
     , subscriptions = subscriptions
     , view = view
+    , onUrlRequest = LinkClicked
+    , onUrlChange = UrlChanged
     }
 
 --Model
 
 -- date & timestamp format May 5, 2023 9:00 am
 type alias Model =
-  { zone : Time.Zone
-  , time : Time.Posix
-  , year : Int
-  , month : Int
-  , day :  Int  
-  , hh : Int
-  , mm: Int 
-  , am : String 
-  , link : Bool
+  { 
+    key : Nav.Key
+    , url : Url.Url
+    , zone : Time.Zone
+    , time : Time.Posix
+    , slots : List Slots
+    , ms : List (String, Int) 
+    , link : Bool
   }
 
+type alias Slots =
+    {
+        id : Int
+        , year : Int
+        , month : Int
+        , day :  Int  
+        , hh : Int
+        , mm: Int 
+    }
 
-type AmPm = AM | PM
 
-
-
-init : () -> (Model, Cmd Msg)
-init _ =
-  ( Model Time.utc (Time.millisToPosix 0) 2023 12 30  8 30  "AM" False
-  , Task.perform AdjustTimeZone Time.here
-  )
+init : ()-> Url.Url -> Nav.Key -> (Model, Cmd Msg)
+init flags url key =
+  let
+    queryString =  Maybe.withDefault "" (Url.percentDecode (Maybe.withDefault "" url.query))
+         getValueOfmsKey (splitQueryString queryString )
+          
+  in
+    ( Model key url Time.utc (Time.millisToPosix 0) [Slots 0 0 0 0 0 0]  qrpm False , Task.perform AdjustTimeZone Time.here )
 
 
 
 -- UPDATE
 
 
-type Msg
-  = Tick Time.Posix
-  | ShowCalendar
-  | AdjustTimeZone Time.Zone
-  | YearUpdate String 
-  | MonthUpdate  String
-  | DayUpdate  String
-  | HourUpdate String 
-  | MinUpdate String 
-  | TimeUpdate String
-  | Share
 
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    LinkClicked urlRequest ->
+      case urlRequest of
+        Browser.Internal url ->
+          ( model, Nav.pushUrl model.key (Url.toString url) )
+
+        Browser.External href ->
+          ( model, Nav.load href )
+
+    UrlChanged url ->
+      ( { model | url = url }
+      , Cmd.none
+      )
     Tick newTime ->
       ( { model | time = newTime }
       , Cmd.none
@@ -112,7 +122,7 @@ update msg model =
         , Cmd.none
         )
     TimeUpdate newtime ->
-        ( { model | am =  newtime , link = False }
+        ( { model | ms =  newtime , link = False }
         , Cmd.none
         )
     Share -> 
@@ -127,13 +137,13 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
         Time.every 1000 Tick
 
 -- VIEW
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view model =
   let
     dateString = Date.toIsoString (fromPosix model.zone model.time)
@@ -142,95 +152,155 @@ view model =
     second = Time.toSecond model.zone model.time
 
   in
-    div[align "center"][
-       -- h3 [] [ Html.text (dateString ++ " " ++  String.fromInt hour ++ ":" ++  String.fromInt minute ++ ":" ++  String.fromInt second) ],
-          div [] [
-             svg
-                [ viewBox "0 0 400 400"
-                , width "400"
-                , height "400"
+  { title = "Free time matcher with timezone converter.",
+    body = [
+       text "The current URL is: "
+      , Html.b [] [ text (  model.url.path) ]
+      , Html.ul []
+          [ viewLink "Home" "/home"
+          , viewLink "Shared" "/Shared"
+          ]
+      , div[align "center"][
+        -- h3 [] [ Html.text (dateString ++ " " ++  String.fromInt hour ++ ":" ++  String.fromInt minute ++ ":" ++  String.fromInt second) ],
+            div [] [
+                svg
+                    [ viewBox "0 0 400 400"
+                    , width "400"
+                    , height "400"
+                    ]
+                    [ circle [ cx "200", cy "200", r "120", fill "#1293D8" ] []
+                    , viewHand 6 60 (toFloat hour/12)
+                    , viewHand 6 90 (toFloat minute/60)
+                    , viewHand 3 90 (toFloat second/60)
+                    ,   Svg.text_
+                        [   Svg.Attributes.x "50%", Svg.Attributes.y "25%", Svg.Attributes.textAnchor "middle", 
+                            fontFamily "Gill Sans", 
+                            fontSize "20",
+                            textAnchor "middle",
+                            fill "white", 
+                            Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+
+                        ] [Svg.text( String.fromInt (Date.year (fromPosix model.zone model.time)) )]
+                    ,  Svg.text_
+                        [   Svg.Attributes.x "50%", Svg.Attributes.y "70%", Svg.Attributes.textAnchor "middle", 
+                            fontFamily "Gill Sans", 
+                            fontSize "20",
+                            textAnchor "middle",
+                            fill "white", 
+                            Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+
+                        ] [Svg.text (  (Date.month (fromPosix model.zone model.time)) |> monthToName )]
+                    ,  Svg.text_
+                        [   Svg.Attributes.x "50%", Svg.Attributes.y "75%", Svg.Attributes.textAnchor "middle", 
+                            fontFamily "Gill Sans", 
+                            fontSize "20",
+                            textAnchor "middle",
+                            fill "white", 
+                            Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+
+                        ] [Svg.text (String.fromInt (Date.day (fromPosix model.zone model.time))  )]
+                    ]
                 ]
-                [ circle [ cx "200", cy "200", r "120", fill "#1293D8" ] []
-                , viewHand 6 60 (toFloat hour/12)
-                , viewHand 6 90 (toFloat minute/60)
-                , viewHand 3 90 (toFloat second/60)
-                ,   Svg.text_
-                    [   Svg.Attributes.x "50%", Svg.Attributes.y "25%", Svg.Attributes.textAnchor "middle", 
-                        fontFamily "Gill Sans", 
-                        fontSize "20",
-                        textAnchor "middle",
-                        fill "white", 
-                        Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
 
-                    ] [Svg.text( String.fromInt (Date.year (fromPosix model.zone model.time)) )]
-                ,  Svg.text_
-                    [   Svg.Attributes.x "50%", Svg.Attributes.y "70%", Svg.Attributes.textAnchor "middle", 
-                        fontFamily "Gill Sans", 
-                        fontSize "20",
-                        textAnchor "middle",
-                        fill "white", 
-                        Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+            , input [ type_ "text", size 2,  placeholder "YYYY", value (String.fromInt model.year) , onInput YearUpdate  ] []
+            , Html.text "-"
+            , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.month) , onInput MonthUpdate ] []
+            , Html.text "-"
+            , input [ type_ "text", size 1, placeholder "DD", value (String.fromInt model.day) , onInput DayUpdate ] []
+            , Html.text "         "
+            , input [ type_ "text", size 1, placeholder "HH", value (String.fromInt model.hh), onInput HourUpdate ] []
+            , Html.text ":"
+            , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.mm), onInput MinUpdate] []
+            , Html.text "  "
+            , input [ type_ "text", size 1, placeholder "AM", value  model.am , onInput TimeUpdate ] []
+            , button [ onClick Share ] [ Html.text "Share" ]
+            , br [][]
+            , div[][ dateToMillsec  model.slots.year model.slots.month model.slots.day model.slots.hh model.slots.mm model.link ]
+        ]
+    ]
+  }
 
-                    ] [Svg.text (  (Date.month (fromPosix model.zone model.time)) |> monthToName )]
-                ,  Svg.text_
-                    [   Svg.Attributes.x "50%", Svg.Attributes.y "75%", Svg.Attributes.textAnchor "middle", 
-                        fontFamily "Gill Sans", 
-                        fontSize "20",
-                        textAnchor "middle",
-                        fill "white", 
-                        Svg.Attributes.style "-webkit-user-select" -- make text unselectable by browser (seems to work, though hard to test with certainty)
+displaySlots : Model -> Html Msg
+displaySlots model = 
+    if model.ms.length > 0 then
+        List.map (\msavalue -> Time.millisToPosix msavalue ) model.ms  
+            |> List.map (\posixvalue -> slotMaker model posixvalue )
+            |> List.map (\slot -> timeSlotElement model )
+      
+        
 
-                    ] [Svg.text (String.fromInt (Date.day (fromPosix model.zone model.time))  )]
-                ]
-            ]
+    else 
+        timeSlotElement model 1
 
-        , input [ type_ "text", size 2,  placeholder "YYYY", value (String.fromInt model.year) , onInput YearUpdate  ] []
+slotMaker : Model -> Time.Posix -> Slots
+slotMaker model posix =
+        Slots (Time.toYear model.zone  posix) (Time.toMonth model.zone  posix) (Time.toDay model.zone  posix) (Time.toHour model.zone  posix) (Time.toMinute model.zone  posix)
+
+
+timeSlotElement : Model -> Int -> Html Msg
+timeSlotElement model index =
+    div [Html.id index] [
+        input [ type_ "text", size 2,  placeholder "YYYY", value (String.fromInt model.slots.year) , onInput YearUpdate  ] []
         , Html.text "-"
-        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.month) , onInput MonthUpdate ] []
+        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.slots.month) , onInput MonthUpdate ] []
         , Html.text "-"
-        , input [ type_ "text", size 1, placeholder "DD", value (String.fromInt model.day) , onInput DayUpdate ] []
+        , input [ type_ "text", size 1, placeholder "DD", value (String.fromInt model.slots.day) , onInput DayUpdate ] []
         , Html.text "         "
-        , input [ type_ "text", size 1, placeholder "HH", value (String.fromInt model.hh), onInput HourUpdate ] []
+        , input [ type_ "text", size 1, placeholder "HH", value (String.fromInt model.slots.hh), onInput HourUpdate ] []
         , Html.text ":"
-        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.mm), onInput MinUpdate] []
+        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt model.slots.mm), onInput MinUpdate] []
         , Html.text "  "
         , input [ type_ "text", size 1, placeholder "AM", value  model.am , onInput TimeUpdate ] []
-        , button [ onClick Share ] [ Html.text "Share" ]
-        , br [][]
-        , div[][ dateToMillsec  model.year model.month model.day model.hh model.mm model.link ]
     ]
-    
+viewLink : String -> String -> Html msg
+viewLink text hrefPath =
+  Html.li [] [ Html.a [ Html.Attributes.href hrefPath ] [ Html.text text ] ]
 
+{-|
+ A function to split a string into key-value pairs
+ -}
+splitQueryString : String -> List (String, String)
+splitQueryString queryString =
+    let
+        pairs = String.split "&" queryString
+                    |> sort
+    in
+    List.map
+        (\pair ->
+            case String.split "=" pair of
+                [ key, value ] ->
+                    ( key, value )
 
---
+                _ ->
+                    ("", "")
+        )
+        pairs
 
--- viewInput : String -> String -> (Time.Month, Int, Int ) -> (Int, Int , AmPm ) -> msg -> Html msg
--- viewInput t p v1 v2 toMsg =
---     let 
---             v = toString 
---     in
---         input [ type_ t, placeholder p, value v, onInput ShowCalendar ] []
+getValueByKey : List (a, b) -> a -> Maybe b
+getValueByKey myList key =
+    List.filter (\(k, _) -> k == key) myList
+        |> List.head
+        |> Maybe.map Tuple.second
 
+getValueOfmsKey : List (String, String)  -> List Int
+getValueOfmsKey list  =
+     List.filter (\(key, _) -> String.startsWith key "ms") list
+        |>  List.map (\(_, value) ->  String.toInt(value) )
 
--- yyyy-mm-dd HH:mm
--- toPosix : Time.Zone -> String -> Int
--- toPosix zone dateTimeString =
---     let
---         dateTime = String.split " " dateTimeString
---         date = List.head dateTime
---         time = List.head <| List.tail dateTime
---         [ year, month, day ] = String.split "-" date
---         [ hours, minutes ] = String.split ":" time
---         posix = Time.posix <| Time.millisToPosix 0
---             |> Time.setYear (String.toInt year |> Result.withDefault 0)
---             |> Time.setMonth (String.toInt month |> Result.withDefault 1)
---             |> Time.setDay (String.toInt day |> Result.withDefault 1)
---             |> Time.setHour (String.toInt hours |> Result.withDefault 0)
---             |> Time.setMinute (String.toInt minutes |> Result.withDefault 0)
---             |> Time.inZone zone
---             |> Time.toMillis
---     in
---     posix
+getQueryValueForKey :  String -> String -> Maybe String
+getQueryValueForKey queryString key =
+    queryString
+        |> splitQueryString
+        |> getValueByKey key
+
+{-|
+
+Fetch value from List given Index
+-}
+fetchValue : List a -> Int -> Maybe a
+fetchValue list index =
+   getValueByKey (List.indexedMap Tuple.pair list) index
+
 
 dateToMillsec : Int -> Int -> Int -> Int-> Int -> Bool -> Html Msg
 dateToMillsec year month day hh mm link =
