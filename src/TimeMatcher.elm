@@ -109,9 +109,12 @@ update msg model =
       )
 
     AddSlot ->
-      ( model
-      , Cmd.none
-      )
+        let
+            List.length model.ms
+        in 
+            ( model
+            , Cmd.none
+            )
 
     YearUpdatea key newYear-> 
         let
@@ -228,6 +231,7 @@ view model =
                         ] [Svg.text (String.fromInt (Date.day (fromPosix model.zone model.time))  )]
                     ]
                 ]
+            , button [ onClick AddSlot ]  [ Html.text "+" ]
             , displaySlots model
             , button [ onClick Share ] [ Html.text "Share" ]
             , br [][]
@@ -285,15 +289,15 @@ displaySlots model =
 timeSlotElement : Slot -> String -> Html Msg
 timeSlotElement slot qkey =
     div [Html.Attributes.id qkey] [
-        input [ type_ "text", size 2,  placeholder "YYYY", value (String.fromInt slot.year) , onInput (YearUpdatea qkey) ] []
+        input [ type_ "text", size 4,  placeholder "YYYY", value (String.fromInt slot.year) , onInput (YearUpdatea qkey) ] []
         , Html.text "-"
-        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt slot.month) , onInput (MonthUpdatea qkey) ] []
+        , input [ type_ "text", size 2, placeholder "MM", value (String.fromInt slot.month) , onInput (MonthUpdatea qkey) ] []
         , Html.text "-"
-        , input [ type_ "text", size 1, placeholder "DD", value (String.fromInt slot.day) , onInput (DayUpdatea qkey) ] []
+        , input [ type_ "text", size 2, placeholder "DD", value (String.fromInt slot.day) , onInput (DayUpdatea qkey) ] []
         , Html.text "         "
-        , input [ type_ "text", size 1, placeholder "HH", value (String.fromInt slot.hh), onInput (HourUpdatea qkey) ] []
+        , input [ type_ "text", size 2, placeholder "HH", value (String.fromInt slot.hh), onInput (HourUpdatea qkey) ] []
         , Html.text ":"
-        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt slot.mm), onInput (MinUpdatea qkey)] []
+        , input [ type_ "text", size 2, placeholder "MM", value (String.fromInt slot.mm), onInput (MinUpdatea qkey)] []
     
     ]
 
