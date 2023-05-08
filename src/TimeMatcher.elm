@@ -72,11 +72,11 @@ type Msg
   | UrlChanged Url.Url
   | Tick Time.Posix
   | AdjustTimeZone Time.Zone
-  | YearUpdate String 
-  | MonthUpdate  String
-  | DayUpdate  String
-  | HourUpdate String 
-  | MinUpdate String 
+  | YearUpdatea String String
+  | MonthUpdatea  String String
+  | DayUpdatea  String String
+  | HourUpdatea String String
+  | MinUpdatea String String
   | TimeUpdate 
   | AddSlot
   | Share
@@ -113,28 +113,46 @@ update msg model =
       , Cmd.none
       )
 
-    YearUpdate newYear-> 
+    YearUpdatea key newYear-> 
         let
+            newms = model.ms 
+                        |> List.map (\(k, ms, slot) -> (updateSlotYear (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newYear)) ))
         in
-            ( { model | link = False}
+            ( { model | ms = newms , link = False}
             , Cmd.none
             )
-    MonthUpdate newMonth ->
-        ( { model |  link = False }
-        , Cmd.none
-        )
-    DayUpdate newDay ->
-        ( { model | link = False}
-        , Cmd.none
-        )
-    HourUpdate newhh ->
-        ( { model | link = False }
-        , Cmd.none
-        )
-    MinUpdate newmm ->
-        ( { model | link = False }
-        , Cmd.none
-        )
+    MonthUpdatea key newMonth ->
+       let
+            newms = model.ms 
+                        |> List.map (\(k, ms, slot) -> (updateSlotMonth (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newMonth)) ))
+        in
+            ( { model | ms = newms , link = False}
+            , Cmd.none
+            )
+    DayUpdatea key newDay ->
+        let
+            newms = model.ms 
+                        |> List.map (\(k, ms, slot) -> (updateSlotDay (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newDay)) ))
+        in
+            ( { model | ms = newms , link = False}
+            , Cmd.none
+            )
+    HourUpdatea key newhh ->
+        let
+            newms = model.ms 
+                        |> List.map (\(k, ms, slot) -> (updateSlotHH (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newhh)) ))
+        in
+            ( { model | ms = newms , link = False}
+            , Cmd.none
+            )
+    MinUpdatea key newmm ->
+        let
+            newms = model.ms 
+                        |> List.map (\(k, ms, slot) -> (updateSlotMM (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newmm)) ))
+        in
+            ( { model | ms = newms , link = False}
+            , Cmd.none
+            )
     TimeUpdate  ->
         ( { model | link = False }
         , Cmd.none
@@ -220,6 +238,42 @@ view model =
 
 -- HELPING FUNCTIONS
 
+updateSlotYear : (String, Int , Slot) -> String -> String -> Int -> (String, Int , Slot)
+updateSlotYear (p, q, r) key  newValue =
+    if p == key then
+        (p, q, { r | year = (String.fromInt newValue) })
+    else
+        (p, q, r)
+    
+
+updateSlotMonth : (String, Int , Slot) -> String -> Int  -> (String, Int , Slot)
+updateSlotMonth (p, q, r) key newValue =
+    if p == key then
+        (p, q, { r | month = (String.fromInt newValue) })
+    else
+        (p, q, r)
+
+updateSlotDay : (String, Int , Slot) -> String -> Int  -> (String, Int , Slot)
+updateSlotDay (p, q, r) key newValue =
+    if p == key then
+        (p, q, { r | day = (String.fromInt newValue) })
+    else
+        (p, q, r)
+
+updateSlotHH : (String, Int , Slot) -> String -> Int  -> (String, Int , Slot)
+updateSlotHH (p, q, r) key newValue =
+    if p == key then
+        (p, q, { r | hh = (String.fromInt newValue) })
+    else
+        (p, q, r)
+
+updateSlotMM : (String, Int , Slot) -> String -> Int  -> (String, Int , Slot)
+updateSlotMM (p, q, r) key newValue =
+    if p == key then
+        (p, q, { r | mm = (String.fromInt newValue) })
+    else
+        (p, q, r)
+
 displaySlots : Model -> Html Msg
 displaySlots model = 
         List.map (\(key, _, slot) -> timeSlotElement slot key ) model.ms
@@ -231,20 +285,21 @@ displaySlots model =
 timeSlotElement : Slot -> String -> Html Msg
 timeSlotElement slot qkey =
     div [Html.Attributes.id qkey] [
-        input [ type_ "text", size 2,  placeholder "YYYY", value (String.fromInt slot.year) , onInput YearUpdate  ] []
+        input [ type_ "text", size 2,  placeholder "YYYY", value (String.fromInt slot.year) , onInput (YearUpdatea qkey) ] []
         , Html.text "-"
-        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt slot.month) , onInput MonthUpdate ] []
+        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt slot.month) , onInput (MonthUpdatea qkey) ] []
         , Html.text "-"
-        , input [ type_ "text", size 1, placeholder "DD", value (String.fromInt slot.day) , onInput DayUpdate ] []
+        , input [ type_ "text", size 1, placeholder "DD", value (String.fromInt slot.day) , onInput (DayUpdatea qkey) ] []
         , Html.text "         "
-        , input [ type_ "text", size 1, placeholder "HH", value (String.fromInt slot.hh), onInput HourUpdate ] []
+        , input [ type_ "text", size 1, placeholder "HH", value (String.fromInt slot.hh), onInput (HourUpdatea qkey) ] []
         , Html.text ":"
-        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt slot.mm), onInput MinUpdate] []
+        , input [ type_ "text", size 1, placeholder "MM", value (String.fromInt slot.mm), onInput (MinUpdatea qkey)] []
     
     ]
 
-
-viewLink : String -> String -> Html msg
+          
+             
+viewLink : String -> String -> Html Msg
 viewLink text hrefPath =
   Html.li [] [ Html.a [ Html.Attributes.href hrefPath ] [ Html.text text ] ]
 
