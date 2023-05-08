@@ -13,6 +13,8 @@ import Time exposing (..)
 import Html.Attributes exposing (value, size, placeholder, align, attribute, id)
 import List exposing (sort)
 import Json.Decode exposing (bool)
+import Html.Attributes exposing (disabled)
+import Html exposing (img)
 
 --Main
 
@@ -79,6 +81,7 @@ type Msg
   | MinUpdatea String String
   | TimeUpdate 
   | AddSlot
+  | RemoveSlot String
   | Share
 
 
@@ -110,13 +113,21 @@ update msg model =
 
     AddSlot ->
         let
-            List.length model.ms
+            newms = [ ((picknextMs model), 0 , (Slot  2025 1 5 13 59))]  
         in 
-            ( model
+            ( { model | ms = (List.append model.ms newms) , link = False }
+            , Cmd.none
+            )
+    RemoveSlot qkey ->
+        let
+            newms = removeSlotReorder model qkey
+                                                       
+        in 
+            ( { model | ms = newms , link = False }
             , Cmd.none
             )
 
-    YearUpdatea key newYear-> 
+    YearUpdatea key newYear -> 
         let
             newms = model.ms 
                         |> List.map (\(k, ms, slot) -> (updateSlotYear (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newYear)) ))
@@ -231,7 +242,7 @@ view model =
                         ] [Svg.text (String.fromInt (Date.day (fromPosix model.zone model.time))  )]
                     ]
                 ]
-            , button [ onClick AddSlot ]  [ Html.text "+" ]
+            , button [ disabled ((List.length model.ms) >=3) ,onClick AddSlot ]  [ Html.text "Add Slot" ]
             , displaySlots model
             , button [ onClick Share ] [ Html.text "Share" ]
             , br [][]
@@ -241,6 +252,26 @@ view model =
   }
 
 -- HELPING FUNCTIONS
+
+removeSlotReorder : Model -> String-> List (String, Int, Slot)
+removeSlotReorder model qkey =
+        List.filter (\(k,_,_) -> k /= qkey ) model.ms
+                                |> List.indexedMap Tuple.pair 
+                                |> List.map (\(index, (k, p, r)) -> case index of
+                                                                            0 -> ("msa", p, r)
+                                                                            1 -> ("msb", p, r)
+                                                                            2 -> ("msc", p, r) 
+                                                                            _ -> ("msd", p, r) 
+                                                                            ) 
+
+picknextMs : Model -> String
+picknextMs model =
+    --keyslist = List.map (\(k, _ , _) -> k ) model.ms
+    case (List.length model.ms) of
+        0 -> "msa"
+        1 -> "msb"  
+        2 -> "msc"
+        _ -> "msd"
 
 updateSlotYear : (String, Int , Slot) -> String  -> Int -> (String, Int , Slot)
 updateSlotYear (p, q, r) key  newValue =
@@ -298,6 +329,8 @@ timeSlotElement slot qkey =
         , input [ type_ "text", size 2, placeholder "HH", value (String.fromInt slot.hh), onInput (HourUpdatea qkey) ] []
         , Html.text ":"
         , input [ type_ "text", size 2, placeholder "MM", value (String.fromInt slot.mm), onInput (MinUpdatea qkey)] []
+        , Html.text "         "
+        , button [ onClick (RemoveSlot qkey)]  [ Html.text "🗑️" ]
     
     ]
 
