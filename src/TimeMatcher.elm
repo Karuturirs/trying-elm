@@ -10,7 +10,7 @@ import Svg.Attributes exposing (..)
 import Html.Events exposing (..)
 import Date exposing (fromCalendarDate, fromPosix)
 import Time exposing (..)
-import Html.Attributes exposing (value, size, placeholder, align, attribute, id)
+import Html.Attributes exposing (value, size, placeholder, align, attribute, id, style)
 import List exposing (sort)
 import Json.Decode exposing (bool)
 import Html.Attributes exposing (disabled)
@@ -140,7 +140,7 @@ update msg model =
             newms = model.ms 
                         |> List.map (\(k, ms, slot) -> (updateSlotMonth (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newMonth)) ))
         in
-            ( { model | ms = newms , link = False}
+            ( { model | ms = newms , link = True}
             , Cmd.none
             )
     DayUpdatea key newDay ->
@@ -171,10 +171,10 @@ update msg model =
         ( { model | link = False }
         , Cmd.none
         )
-    Share -> 
-        (  { model | link =  True }
-        , Cmd.none
-        )
+    Share ->
+            (  { model | link =  True }
+            , Cmd.none
+            )
 
 
 -- SUBSCRIPTIONS
@@ -195,14 +195,14 @@ view model =
   in
   { title = "Free time matcher with auto timezone converter.",
     body = [
-       text "The current URL is: "
-      , Html.b [] [ text (  model.url.path) ]
-      , Html.ul []
-          [ viewLink "Home" "/home"
-          , viewLink "Shared" "/Shared"
-          ]
-      , div[align "center"][
-        -- h3 [] [ Html.text (dateString ++ " " ++  String.fromInt hour ++ ":" ++  String.fromInt minute ++ ":" ++  String.fromInt second) ],
+    --    text "The current URL is: "
+    --   , Html.b [] [ text (  model.url.path) ]
+    --   , Html.ul []
+    --       [ viewLink "Home" "/home"
+    --       , viewLink "Shared" "/Shared"
+    --       ]
+        div[align "center"][
+         Html.h3 [Html.Attributes.style "font-family" "Gill Sans"] [ Html.text "Stop bothering about timezones convertion, share your availabilty in your local time to anyone around the world." ],
             div [] [
                 svg
                     [ viewBox "0 0 400 400"
@@ -242,11 +242,23 @@ view model =
                         ] [Svg.text (String.fromInt (Date.day (fromPosix model.zone model.time))  )]
                     ]
                 ]
-            , button [ disabled ((List.length model.ms) >=3) ,onClick AddSlot ]  [ Html.text "Add Slot" ]
+            , div [ Html.Attributes.style "width" "70%"
+                                , Html.Attributes.style "min-width" "204px"
+                                , Html.Attributes.style "padding-bottom" "20px"] [
+                                    div [ Html.Attributes.style "width" "calc(100%-4px)"
+                                        , Html.Attributes.style "min-width" "200px"
+                                        , Html.Attributes.style "margin-left" "10px"
+                                        , Html.Attributes.style  "title" "Put local date here"
+                                        , Html.Attributes.style "font-family" "Gill Sans" ] [text "Enter Local YYYY - MM - DD  HH:MM"
+                                        ,button [ Html.Attributes.style "margin-left" "10px", disabled ((List.length model.ms) >=3) ,onClick AddSlot ]  [ Html.text "➕" ]
+                                    ]
+                ]
             , displaySlots model
-            , button [ onClick Share ] [ Html.text "Share" ]
-            , br [][]
+            , button [ Html.Attributes.style "margin-left" "10px"
+                       , Html.Attributes.style "font-family" "Gill Sans"
+                       , onClick Share ] [ Html.text "Share 🚀" ]
             , div[][ dateToMillsecSlot  model.ms model.link ]
+            
         ]
     ]
   }
@@ -319,19 +331,19 @@ displaySlots model =
 
 timeSlotElement : Slot -> String -> Html Msg
 timeSlotElement slot qkey =
-    div [Html.Attributes.id qkey] [
-        input [ type_ "text", size 4,  placeholder "YYYY", value (String.fromInt slot.year) , onInput (YearUpdatea qkey) ] []
+    div [Html.Attributes.id qkey, Html.Attributes.style "padding-bottom" "20px", Html.Attributes.style "font-family" "Gill Sans"][
+        input [ type_ "text", size 4,  placeholder "YYYY", value (String.fromInt slot.year) , onInput (YearUpdatea qkey) , Html.Attributes.style "font-family" "Gill Sans"] []
         , Html.text "-"
-        , input [ type_ "text", size 2, placeholder "MM", value (String.fromInt slot.month) , onInput (MonthUpdatea qkey) ] []
+        , input [ type_ "text", size 2, placeholder "MM", value (String.fromInt slot.month) , onInput (MonthUpdatea qkey) , Html.Attributes.style "font-family" "Gill Sans"] []
         , Html.text "-"
-        , input [ type_ "text", size 2, placeholder "DD", value (String.fromInt slot.day) , onInput (DayUpdatea qkey) ] []
+        , input [ type_ "text", size 2, placeholder "DD", value (String.fromInt slot.day) , onInput (DayUpdatea qkey) , Html.Attributes.style "font-family" "Gill Sans"] []
         , Html.text "         "
-        , input [ type_ "text", size 2, placeholder "HH", value (String.fromInt slot.hh), onInput (HourUpdatea qkey) ] []
+        , input [ type_ "text", size 2, placeholder "HH", value (String.fromInt slot.hh), onInput (HourUpdatea qkey) , Html.Attributes.style "font-family" "Gill Sans"] []
         , Html.text ":"
-        , input [ type_ "text", size 2, placeholder "MM", value (String.fromInt slot.mm), onInput (MinUpdatea qkey)] []
+        , input [ type_ "text", size 2, placeholder "MM", value (String.fromInt slot.mm), onInput (MinUpdatea qkey) , Html.Attributes.style "font-family" "Gill Sans"] []
         , Html.text "         "
         , button [ onClick (RemoveSlot qkey)]  [ Html.text "🗑️" ]
-    
+                            
     ]
 
           
