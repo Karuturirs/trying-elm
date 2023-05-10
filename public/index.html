@@ -36,29 +36,8 @@ customElements.define('time-millisec',
             const day = this.getAttribute('day');
             const hh = this.getAttribute('hh');
             const mm = this.getAttribute('mm');
-            this.textContent = dateToMillsec(year, month, day, hh, mm);
-        }
-    }
-);
-
-function millsecToDate(millsec)
-{
-		return (new Date(millsec));
-}
-
-customElements.define('millsec-to-time',
-    class extends HTMLElement {
-        // things required by Custom Elements
-        constructor() { super(); }
-        connectedCallback() { this.setTextContent(); }
-        attributeChangedCallback() { this.setTextContent(); }
-        static get observedAttributes() { return ['millsec']; }
-
-        // Our function to set the textContent based on attributes.
-        setTextContent()
-        {
-            const mill = this.getAttribute('millsec');
-            this.textContent = millsecToDate(mill);
+           
+            this.textContent =  (id == "msa" ? "?msa=" : "&"+id+"=") +dateToMillsec(year, month, day, hh, mm);
         }
     }
 );

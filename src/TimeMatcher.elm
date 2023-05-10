@@ -15,6 +15,7 @@ import List exposing (sort)
 import Json.Decode exposing (bool)
 import Html.Attributes exposing (disabled)
 import Html exposing (img)
+import Json.Decode as Decode
 
 --Main
 
@@ -41,6 +42,7 @@ type alias Model =
     , time : Time.Posix
     , ms : List (String, Int , Slot)
     , link : Bool
+    , ts :Int
   }
 
 type alias Slot =
@@ -66,7 +68,7 @@ init _ url key =
     let
         mslist = [ ("msa", 0 , (Slot  2023 1 31 13 59))]  
     in
-        ( Model key url Time.utc (Time.millisToPosix 0) mslist  False 
+        ( Model key url Time.utc (Time.millisToPosix 0) mslist  False 0 
         , Task.perform AdjustTimeZone Time.here )
 
 type Msg
@@ -83,6 +85,7 @@ type Msg
   | AddSlot
   | RemoveSlot String
   | Share
+
 
 
 
@@ -140,7 +143,7 @@ update msg model =
             newms = model.ms 
                         |> List.map (\(k, ms, slot) -> (updateSlotMonth (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newMonth)) ))
         in
-            ( { model | ms = newms , link = True}
+            ( { model | ms = newms , link = False}
             , Cmd.none
             )
     DayUpdatea key newDay ->
@@ -169,13 +172,12 @@ update msg model =
             )
     TimeUpdate  ->
         ( { model | link = False }
-        , Cmd.none
-        )
-    Share ->
-            (  { model | link =  True }
             , Cmd.none
             )
-
+    Share ->
+        ( { model | link =  True }
+            , Cmd.none
+            )
 
 -- SUBSCRIPTIONS
 
@@ -257,13 +259,26 @@ view model =
             , button [ Html.Attributes.style "margin-left" "10px"
                        , Html.Attributes.style "font-family" "Gill Sans"
                        , onClick Share ] [ Html.text "Share 🚀" ]
-            , div[][ dateToMillsecSlot  model.ms model.link ]
+            , dateToMillsecSlot  model.ms model.link model.url 
+           
             
         ]
     ]
   }
 
 -- HELPING FUNCTIONS
+  
+-- generateUrl : Model -> String
+-- generateUrl model = 
+--     let
+--        t = model.ms 
+--             |> List.map (\(k, m , s) -> (dateToMillsec k s.year s.month s.day s.hh s.mm True))
+--             |> List.map toString 
+--             |> String.join ""
+--     in 
+--        Url.toString ++ t 
+
+        
 
 removeSlotReorder : Model -> String-> List (String, Int, Slot)
 removeSlotReorder model qkey =
@@ -389,15 +404,26 @@ posixToSlot : Time.Posix -> Time.Zone -> Slot
 posixToSlot posix zone =
     Slot (Time.toYear zone posix ) ( Date.monthToNumber (Time.toMonth zone posix)) (Time.toDay zone posix) (Time.toHour zone posix) (Time.toMinute zone posix)
 
-dateToMillsecSlot : List (String, Int, Slot) -> Bool -> Html Msg
-dateToMillsecSlot mslist link =
-            mslist 
-               |> List.map (\(k, _ , s) -> (dateToMillsec k s.year s.month s.day s.hh s.mm link) )
-               |> div [] 
+dateToMillsecSlot : List (String, Int, Slot) -> Bool -> Url -> Html Msg
+dateToMillsecSlot mslist link url =
+        if link then
+             ((textCustom (Url.toString url) ) ::  dateToMillsecList mslist)
+                      |> div []
 
-dateToMillsec : String -> Int -> Int -> Int -> Int-> Int -> Bool -> Html Msg
-dateToMillsec nodeid year month day hh mm link =
-    if link then
+        else 
+            div[][]
+
+textCustom : String ->Html Msg
+textCustom url =
+    Html.text url
+
+
+dateToMillsecList : List (String, Int, Slot)  -> List (Html Msg)
+dateToMillsecList mslist =
+    List.map (\(k, _ , s) -> (dateToMillsec k s.year s.month s.day s.hh s.mm ) ) mslist         
+
+dateToMillsec : String -> Int -> Int -> Int -> Int-> Int -> Html Msg
+dateToMillsec nodeid year month day hh mm  =
         Html.node "time-millisec"
             [ attribute "id" nodeid
             , attribute "year" (String.fromInt year)
@@ -406,9 +432,23 @@ dateToMillsec nodeid year month day hh mm link =
             , attribute "hh" (String.fromInt hh)
             , attribute "mm" (String.fromInt mm)
             ]
-            []
-    else 
-        Html.a [][]
+            [ ]
+
+-- dateToMillsecDecode : String -> Int -> Int -> Int -> Int-> Int-> String
+-- dateToMillsecDecode nodeid year month day hh mm =
+--     let
+--        text = Html.node "time-millisec"
+--                     [ attribute "id" nodeid
+--                     , attribute "year" (String.fromInt year)
+--                     , attribute "month" (String.fromInt month)
+--                     , attribute "day" (String.fromInt day)
+--                     , attribute "hh" (String.fromInt hh)
+--                     , attribute "mm" (String.fromInt mm)
+--                     ]
+--                     []
+--     in 
+--      Html.Attribute 
+   
 
 
 viewHand : Int -> Float -> Float -> Svg Msg
