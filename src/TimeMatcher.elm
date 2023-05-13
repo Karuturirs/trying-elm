@@ -17,6 +17,7 @@ import Html.Attributes exposing (disabled)
 import Html exposing (img)
 
 
+
 --Main
 
 
@@ -43,6 +44,7 @@ type alias Model =
     , ms : List (String, Int , Slot)
     , link : Bool
     , ts :Int
+    , copyText :String
   }
 
 type alias Slot =
@@ -68,7 +70,7 @@ init _ url key =
     let
         mslist = buildInitMs url utc
     in
-        ( Model key url Time.utc (Time.millisToPosix 0) mslist  False 0 
+        ( Model key url Time.utc (Time.millisToPosix 0) mslist  False 0 ""
         , Task.perform AdjustTimeZone Time.here )
 
 type Msg
@@ -81,10 +83,10 @@ type Msg
   | DayUpdatea  String String
   | HourUpdatea String String
   | MinUpdatea String String
-  | TimeUpdate 
   | AddSlot
   | RemoveSlot String
   | Share
+  | Copy
 
 
 
@@ -114,7 +116,7 @@ update msg model =
            mslist = buildInitMs model.url newZone
         in
         
-            ( { model | zone = newZone , ms = mslist }
+            ( { model | zone = newZone , ms = mslist, copyText = "" }
             , Cmd.none
             )
 
@@ -122,7 +124,7 @@ update msg model =
         let
             newms = [ ((picknextMs model), 0 , (Slot  2025 1 5 13 59))]  
         in 
-            ( { model | ms = (List.append model.ms newms) , link = False }
+            ( { model | ms = (List.append model.ms newms) , link = False,  copyText = "" }
             , Cmd.none
             )
     RemoveSlot qkey ->
@@ -130,7 +132,7 @@ update msg model =
             newms = removeSlotReorder model qkey
                                                        
         in 
-            ( { model | ms = newms , link = False }
+            ( { model | ms = newms , link = False,  copyText = "" }
             , Cmd.none
             )
 
@@ -139,7 +141,7 @@ update msg model =
             newms = model.ms 
                         |> List.map (\(k, ms, slot) -> (updateSlotYear (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newYear)) ))
         in
-            ( { model | ms = newms , link = False}
+            ( { model | ms = newms , link = False,  copyText = ""}
             , Cmd.none
             )
     MonthUpdatea key newMonth ->
@@ -147,7 +149,7 @@ update msg model =
             newms = model.ms 
                         |> List.map (\(k, ms, slot) -> (updateSlotMonth (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newMonth)) ))
         in
-            ( { model | ms = newms , link = False}
+            ( { model | ms = newms , link = False,  copyText = ""}
             , Cmd.none
             )
     DayUpdatea key newDay ->
@@ -155,7 +157,7 @@ update msg model =
             newms = model.ms 
                         |> List.map (\(k, ms, slot) -> (updateSlotDay (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newDay)) ))
         in
-            ( { model | ms = newms , link = False}
+            ( { model | ms = newms , link = False,  copyText = ""}
             , Cmd.none
             )
     HourUpdatea key newhh ->
@@ -163,7 +165,7 @@ update msg model =
             newms = model.ms 
                         |> List.map (\(k, ms, slot) -> (updateSlotHH (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newhh)) ))
         in
-            ( { model | ms = newms , link = False}
+            ( { model | ms = newms , link = False,  copyText = ""}
             , Cmd.none
             )
     MinUpdatea key newmm ->
@@ -171,18 +173,17 @@ update msg model =
             newms = model.ms 
                         |> List.map (\(k, ms, slot) -> (updateSlotMM (k, ms, slot) key (Maybe.withDefault 0 (String.toInt newmm)) ))
         in
-            ( { model | ms = newms , link = False}
-            , Cmd.none
-            )
-    TimeUpdate  ->
-        ( { model | link = False }
+            ( { model | ms = newms , link = False,  copyText = ""}
             , Cmd.none
             )
     Share ->
-        ( { model | link =  True }
+        ( { model | link =  True ,  copyText = ""}
             , Cmd.none
             )
-
+    Copy -> 
+        ( { model | link =  True, copyText = "copied" }
+                , Cmd.none
+                )
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
@@ -262,8 +263,11 @@ view model =
             , displaySlots model
             , div[ Html.Attributes.style "padding-bottom" "20px"] [ button [ Html.Attributes.style "margin-left" "10px"
                        , Html.Attributes.style "font-family" "Gill Sans"
-                       , onClick Share ] [ Html.text "Share 🚀" ] ]
+                       , onClick Share ] [ Html.text "Generate URl to Share 🚀" ] ]
             , dateToMillsecSlot  model.ms model.link model.url 
+            , copyUrl model.link (checkCopyText model)
+            , copyUrlText model
+            
            
             
         ]
@@ -272,15 +276,22 @@ view model =
 
 -- HELPING FUNCTIONS
   
--- generateUrl : Model -> String
--- generateUrl model = 
---     let
---        t = model.ms 
---             |> List.map (\(k, m , s) -> (dateToMillsec k s.year s.month s.day s.hh s.mm True))
---             |> List.map toString 
---             |> String.join ""
---     in 
---        Url.toString ++ t 
+checkCopyText : Model -> String
+checkCopyText model=
+    if model.copyText /= "" then
+        "✔️ Copied"
+    else
+        "📋 Copy Url"
+
+copyUrl : Bool -> String-> Html Msg
+copyUrl enable textval =
+    if enable  then
+        button [ Html.Attributes.style "margin-left" "10px"
+                       , Html.Attributes.style "font-family" "Gill Sans"
+                       , onClick Copy ] [ Html.text textval ] 
+    else
+        div[][]
+
 
 buildInitMs : Url ->Zone -> List (String, Int, Slot)
 buildInitMs url zone =
@@ -423,7 +434,7 @@ dateToMillsecSlot : List (String, Int, Slot) -> Bool -> Url -> Html Msg
 dateToMillsecSlot mslist link url =
         if link then
              ((textCustom ( toStringUrl url) ) ::  dateToMillsecList mslist)
-                      |> div []
+                      |> div [ Html.Attributes.id "genUrl", Html.Attributes.style  "border-style" "ridge", Html.Attributes.style "display" "inline" ]
 
         else 
             div[][]
@@ -471,21 +482,13 @@ dateToMillsec nodeid year month day hh mm  =
             ]
             [ ]
 
--- dateToMillsecDecode : String -> Int -> Int -> Int -> Int-> Int-> String
--- dateToMillsecDecode nodeid year month day hh mm =
---     let
---        text = Html.node "time-millisec"
---                     [ attribute "id" nodeid
---                     , attribute "year" (String.fromInt year)
---                     , attribute "month" (String.fromInt month)
---                     , attribute "day" (String.fromInt day)
---                     , attribute "hh" (String.fromInt hh)
---                     , attribute "mm" (String.fromInt mm)
---                     ]
---                     []
---     in 
---      Html.Attribute 
-   
+copyUrlText : Model ->  Html Msg
+copyUrlText model=
+    if model.copyText /= "" then
+        Html.node "copy-url"
+                [ attribute "id" "genUrl"] []
+    else
+        div[][]
 
 
 viewHand : Int -> Float -> Float -> Svg Msg

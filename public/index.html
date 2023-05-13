@@ -13,11 +13,33 @@
 </body>
 
 <script type="text/javascript">
+function CopyToClipboard(id)
+{
+    var r = document.createRange();
+    r.selectNode(document.getElementById(id));
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(r);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+}
 
 function dateToMillsec( year, month, day, hh, mm)
 {
 		return (new Date(year, month-1, day, hh, mm)).getTime();
 }
+
+customElements.define('copy-url',
+    class extends HTMLElement {
+        // things required by Custom Elements
+        constructor() { super(); }
+        connectedCallback() { CopyToClipboard(this.getAttribute('id'))  }
+        attributeChangedCallback() {  }
+        static get observedAttributes() { return ['id']; }
+
+        // Our function to set the textContent based on attributes.
+        setTextContent(){}
+    }
+);
 
 customElements.define('time-millisec',
     class extends HTMLElement {
@@ -30,7 +52,7 @@ customElements.define('time-millisec',
         // Our function to set the textContent based on attributes.
         setTextContent()
         {
-            const id = this.getAttribute('id')
+            const id = this.getAttribute('id');
             const year = this.getAttribute('year');
             const month = this.getAttribute('month');
             const day = this.getAttribute('day');
