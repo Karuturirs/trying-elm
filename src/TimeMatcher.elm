@@ -15,7 +15,7 @@ import List exposing (sort)
 import Json.Decode exposing (bool)
 import Html.Attributes exposing (disabled)
 import Html exposing (img)
-import Json.Decode as Decode
+
 
 --Main
 
@@ -66,7 +66,7 @@ qrStr =(Maybe.withDefault "" (Url.percentDecode (Maybe.withDefault "" url.query)
 init : ()-> Url.Url -> Nav.Key -> (Model, Cmd Msg)
 init _ url key =
     let
-        mslist = [ ("msa", 0 , (Slot  2023 1 31 13 59))]  
+        mslist = buildInitMs url utc
     in
         ( Model key url Time.utc (Time.millisToPosix 0) mslist  False 0 
         , Task.perform AdjustTimeZone Time.here )
@@ -110,9 +110,13 @@ update msg model =
       )
 
     AdjustTimeZone newZone ->
-      ( { model | zone = newZone }
-      , Cmd.none
-      )
+        let
+           mslist = buildInitMs model.url newZone
+        in
+        
+            ( { model | zone = newZone , ms = mslist }
+            , Cmd.none
+            )
 
     AddSlot ->
         let
@@ -256,9 +260,9 @@ view model =
                                     ]
                 ]
             , displaySlots model
-            , button [ Html.Attributes.style "margin-left" "10px"
+            , div[ Html.Attributes.style "padding-bottom" "20px"] [ button [ Html.Attributes.style "margin-left" "10px"
                        , Html.Attributes.style "font-family" "Gill Sans"
-                       , onClick Share ] [ Html.text "Share 🚀" ]
+                       , onClick Share ] [ Html.text "Share 🚀" ] ]
             , dateToMillsecSlot  model.ms model.link model.url 
            
             
@@ -278,6 +282,17 @@ view model =
 --     in 
 --        Url.toString ++ t 
 
+buildInitMs : Url ->Zone -> List (String, Int, Slot)
+buildInitMs url zone =
+    let
+        query = (Maybe.withDefault "" url.query)
+    in 
+        if query /= "" then
+            splitQueryString query
+                    |> filtermsKey
+                    |> convertQueryToMS zone 
+        else
+            [ ("msa", 0 , (Slot  2023 1 31 13 59))]
         
 
 removeSlotReorder : Model -> String-> List (String, Int, Slot)
@@ -395,8 +410,8 @@ filtermsKey : List (String, String)  -> List (String, String)
 filtermsKey list  =
      List.filter (\(key, _) -> String.startsWith "ms"  key) list
       
-convertQueryToMS : List (String, String) -> Time.Zone -> List (String, Int, Slot)
-convertQueryToMS list zone =
+convertQueryToMS : Time.Zone ->  List (String, String) -> List (String, Int, Slot)
+convertQueryToMS  zone  list=
         list
           |> List.map(\(k,v) -> (k, Maybe.withDefault 0 (String.toInt v), posixToSlot (Time.millisToPosix (Maybe.withDefault 0 (String.toInt v))) zone ))
 
@@ -407,15 +422,37 @@ posixToSlot posix zone =
 dateToMillsecSlot : List (String, Int, Slot) -> Bool -> Url -> Html Msg
 dateToMillsecSlot mslist link url =
         if link then
-             ((textCustom (Url.toString url) ) ::  dateToMillsecList mslist)
+             ((textCustom ( toStringUrl url) ) ::  dateToMillsecList mslist)
                       |> div []
 
         else 
             div[][]
 
-textCustom : String ->Html Msg
+textCustom : String -> Html Msg
 textCustom url =
     Html.text url
+
+toStringUrl : Url -> String
+toStringUrl url =
+  let
+    http =
+      case url.protocol of
+        Http ->
+          "http://"
+
+        Https ->
+          "https://"
+  in
+  addPort url.port_ (http ++ url.host) ++ url.path
+
+addPort : Maybe Int -> String -> String
+addPort maybePort starter =
+  case maybePort of
+    Nothing ->
+      starter
+
+    Just port_ ->
+      starter ++ ":" ++ String.fromInt port_
 
 
 dateToMillsecList : List (String, Int, Slot)  -> List (Html Msg)
