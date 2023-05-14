@@ -113,7 +113,7 @@ update msg model =
 
     AdjustTimeZone newZone ->
         let
-           mslist = buildInitMs model.url newZone
+           mslist = buildAdjustMs model newZone
         in
         
             ( { model | zone = newZone , ms = mslist, copyText = "" }
@@ -122,7 +122,7 @@ update msg model =
 
     AddSlot ->
         let
-            newms = [ ((picknextMs model), 0 , (Slot  2025 1 5 13 59))]  
+            newms = [ ((picknextMs model), 0 , (Slot  (toYear model.zone model.time) (toMonth model.zone model.time |> Date.monthToNumber) (toDay model.zone model.time) (toHour model.zone model.time) (toMinute model.zone model.time)))]  
         in 
             ( { model | ms = (List.append model.ms newms) , link = False,  copyText = "" }
             , Cmd.none
@@ -209,7 +209,7 @@ view model =
     --       , viewLink "Shared" "/Shared"
     --       ]
         div[align "center"][
-         Html.h3 [Html.Attributes.style "font-family" "Gill Sans"] [ Html.text "Stop bothering about timezones convertion, share your availabilty in your local time to anyone around the world." ],
+         Html.h1 [Html.Attributes.style "font-family" "Gill Sans"] [ Html.text "Stop worrying about time zones. Share your availability in your local time with anyone in the world." ],
             div [] [
                 svg
                     [ viewBox "0 0 400 400"
@@ -256,7 +256,7 @@ view model =
                                         , Html.Attributes.style "min-width" "200px"
                                         , Html.Attributes.style "margin-left" "10px"
                                         , Html.Attributes.style  "title" "Put local date here"
-                                        , Html.Attributes.style "font-family" "Gill Sans" ] [text "Enter Local YYYY - MM - DD  HH:MM"
+                                        , Html.Attributes.style "font-family" "Gill Sans" ] [text (autoTextAdjust model)
                                         ,button [ Html.Attributes.style "margin-left" "10px", disabled ((List.length model.ms) >=3) ,onClick AddSlot ]  [ Html.text "➕" ]
                                     ]
                 ]
@@ -292,8 +292,7 @@ copyUrl enable textval =
     else
         div[][]
 
-
-buildInitMs : Url ->Zone -> List (String, Int, Slot)
+buildInitMs : Url -> Zone -> List (String, Int, Slot)
 buildInitMs url zone =
     let
         query = (Maybe.withDefault "" url.query)
@@ -303,7 +302,30 @@ buildInitMs url zone =
                     |> filtermsKey
                     |> convertQueryToMS zone 
         else
-            [ ("msa", 0 , (Slot  2023 1 31 13 59))]
+            [ ("msa", 0 , (Slot  2013 1 5 13 15))]
+
+autoTextAdjust : Model -> String
+autoTextAdjust model =
+    let
+        query = (Maybe.withDefault "" model.url.query)
+    in 
+        if query /= "" then
+           "Validate below Availability YYYY - MM - DD  HH:MM"
+        else
+           "Enter Your Availability YYYY - MM - DD  HH:MM"
+    
+
+buildAdjustMs : Model ->Zone -> List (String, Int, Slot)
+buildAdjustMs model zone =
+    let
+        query = (Maybe.withDefault "" model.url.query)
+    in 
+        if query /= "" then
+            splitQueryString query
+                    |> filtermsKey
+                    |> convertQueryToMS zone 
+        else
+            [ ("msa", 0 , (Slot  (toYear zone model.time) (toMonth zone model.time |> Date.monthToNumber) (toDay zone model.time) (toHour zone model.time) (toMinute zone model.time)))]
         
 
 removeSlotReorder : Model -> String-> List (String, Int, Slot)
