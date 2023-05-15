@@ -302,7 +302,7 @@ buildInitMs url zone =
                     |> filtermsKey
                     |> convertQueryToMS zone 
         else
-            [ ("msa", 0 , (Slot  2013 1 5 13 15))]
+            [ ("msa", 0 , (Slot  2013 2 5 13 15))]
 
 autoTextAdjust : Model -> String
 autoTextAdjust model =
@@ -310,12 +310,12 @@ autoTextAdjust model =
         query = (Maybe.withDefault "" model.url.query)
     in 
         if query /= "" then
-           "Validate below Availability YYYY - MM - DD  HH:MM"
+           "Pick one/Enter new Availability YYYY - MM - DD  HH:MM"
         else
            "Enter Your Availability YYYY - MM - DD  HH:MM"
     
 
-buildAdjustMs : Model ->Zone -> List (String, Int, Slot)
+buildAdjustMs : Model -> Zone -> List (String, Int, Slot)
 buildAdjustMs model zone =
     let
         query = (Maybe.withDefault "" model.url.query)
@@ -325,8 +325,8 @@ buildAdjustMs model zone =
                     |> filtermsKey
                     |> convertQueryToMS zone 
         else
-            [ ("msa", 0 , (Slot  (toYear zone model.time) (toMonth zone model.time |> Date.monthToNumber) (toDay zone model.time) (toHour zone model.time) (toMinute zone model.time)))]
-        
+            [ ("msa", 0 , (Slot  2013 1 5 13 15))]
+
 
 removeSlotReorder : Model -> String-> List (String, Int, Slot)
 removeSlotReorder model qkey =
